@@ -16,7 +16,6 @@ public class YsmZstd {
             return YSMNative.ysmZstdDecompress(rawData);
 
         byte[] data = YsmZstd.wash(rawData);
-        //FileUtils.writeByteArrayToFile(new File("test.bin"),data);
         return ZstdUtil.decompress(data);
     }
 

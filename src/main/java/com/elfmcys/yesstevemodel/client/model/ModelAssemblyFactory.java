@@ -39,12 +39,12 @@ public class ModelAssemblyFactory {
                 resourceBundle, clientModelInfo.getInfo(),
                 buildTextureRegistry(clientModelInfo, isAuth, textureList), textureList
         );
-        if (isPrimary) {
-            primaryAssembly = assembly;
-            primaryAssembly.getAnimationBundle().getMainAnimations().values().forEach(animation -> {
-                animation.isFromPrimaryAssembly = true;
-            });
-        }
+//        if (isPrimary) {
+//            primaryAssembly = assembly;
+//            primaryAssembly.getAnimationBundle().getMainAnimations().values().forEach(animation -> {
+//                animation.isFromPrimaryAssembly = true;
+//            });
+//        }
         return assembly;
     }
 
@@ -123,10 +123,10 @@ public class ModelAssemblyFactory {
             textureList.add(projectileFiles.getTexture());
             textureList.addAll(projectileFiles.getTexture().getSuffixTextures().values());
             ProjectileModelBundle projectileBundle = new ProjectileModelBundle(model, animations, controllers, projectileFiles.getTexture(), resourceBundle);
-            Iterator<ResourceLocation> typeIterator = FileTypeUtil.resolveEntityTypes(projectileFiles.getTextureNames()).iterator();
-            while (typeIterator.hasNext()) {
-                projectileMap.put(typeIterator.next(), projectileBundle);
-            }
+//            Iterator<ResourceLocation> typeIterator = FileTypeUtil.resolveEntityTypes(projectileFiles.getTextureNames()).iterator();
+//            while (typeIterator.hasNext()) {
+//                projectileMap.put(typeIterator.next(), projectileBundle);
+//            }
         }
         return projectileMap;
     }
@@ -145,9 +145,9 @@ public class ModelAssemblyFactory {
             textureList.add(vehicleFiles.getTexture());
             textureList.addAll(vehicleFiles.getTexture().getSuffixTextures().values());
             VehicleModelBundle vehicleBundle = new VehicleModelBundle(model, animations, controllers, vehicleFiles.getTexture(), resourceBundle);
-            for (ResourceLocation resourceLocation : FileTypeUtil.resolveEntityTypes(vehicleFiles.getTextureNames())) {
-                vehicleMap.put(resourceLocation, vehicleBundle);
-            }
+//            for (ResourceLocation resourceLocation : FileTypeUtil.resolveEntityTypes(vehicleFiles.getTextureNames())) {
+//                vehicleMap.put(resourceLocation, vehicleBundle);
+//            }
         }
         return vehicleMap;
     }

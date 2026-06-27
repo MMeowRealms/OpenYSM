@@ -32,32 +32,32 @@ public class PackIconButton extends Button {
     }
 
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        Minecraft minecraft = Minecraft.getInstance();
-        Font font = minecraft.font;
-        guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + this.height, -6598176, -6598176);
-        ResourceLocation location = FileTypeUtil.getPackIconLocation(this.packData.getPath());
-        AbstractTexture texture = minecraft.textureManager.getTexture(location, MissingTextureAtlasSprite.getTexture());
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        if (texture == MissingTextureAtlasSprite.getTexture()) {
-            guiGraphics.blit(location, getX(), getY(), 0.0f, 0.0f, this.width, this.height, this.width, this.height);
-        } else {
-            guiGraphics.blit(location, getX(), getY(), 0.0f, 0.0f, this.width, this.height, this.width, this.height);
-        }
-        RenderSystem.disableBlend();
-        List listSplit = font.split(getMessage(), 45);
-        if (listSplit.size() > 1) {
-            drawCenteredString(guiGraphics, font, (FormattedCharSequence) listSplit.get(0), getX() + (this.width / 2), (getY() + this.height) - 19, 5592405);
-            drawCenteredString(guiGraphics, font, (FormattedCharSequence) listSplit.get(1), getX() + (this.width / 2), (getY() + this.height) - 10, 5592405);
-        } else {
-            drawCenteredString(guiGraphics, font, getMessage(), getX() + (this.width / 2), (getY() + this.height) - 15, 5592405);
-        }
-        if (isHoveredOrFocused()) {
-            guiGraphics.fillGradient(getX(), getY() + 1, getX() + 1, (getY() + this.height) - 1, -1982745, -1982745);
-            guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + 1, -1982745, -1982745);
-            guiGraphics.fillGradient((getX() + this.width) - 1, getY() + 1, getX() + this.width, (getY() + this.height) - 1, -1982745, -1982745);
-            guiGraphics.fillGradient(getX(), (getY() + this.height) - 1, getX() + this.width, getY() + this.height, -1982745, -1982745);
-        }
+//        Minecraft minecraft = Minecraft.getInstance();
+//        Font font = minecraft.font;
+//        guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + this.height, -6598176, -6598176);
+//        ResourceLocation location = FileTypeUtil.getPackIconLocation(this.packData.getPath());
+//        AbstractTexture texture = minecraft.textureManager.getTexture(location, MissingTextureAtlasSprite.getTexture());
+//        RenderSystem.enableBlend();
+//        RenderSystem.defaultBlendFunc();
+//        if (texture == MissingTextureAtlasSprite.getTexture()) {
+//            guiGraphics.blit(location, getX(), getY(), 0.0f, 0.0f, this.width, this.height, this.width, this.height);
+//        } else {
+//            guiGraphics.blit(location, getX(), getY(), 0.0f, 0.0f, this.width, this.height, this.width, this.height);
+//        }
+//        RenderSystem.disableBlend();
+//        List listSplit = font.split(getMessage(), 45);
+//        if (listSplit.size() > 1) {
+//            drawCenteredString(guiGraphics, font, (FormattedCharSequence) listSplit.get(0), getX() + (this.width / 2), (getY() + this.height) - 19, 5592405);
+//            drawCenteredString(guiGraphics, font, (FormattedCharSequence) listSplit.get(1), getX() + (this.width / 2), (getY() + this.height) - 10, 5592405);
+//        } else {
+//            drawCenteredString(guiGraphics, font, getMessage(), getX() + (this.width / 2), (getY() + this.height) - 15, 5592405);
+//        }
+//        if (isHoveredOrFocused()) {
+//            guiGraphics.fillGradient(getX(), getY() + 1, getX() + 1, (getY() + this.height) - 1, -1982745, -1982745);
+//            guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + 1, -1982745, -1982745);
+//            guiGraphics.fillGradient((getX() + this.width) - 1, getY() + 1, getX() + this.width, (getY() + this.height) - 1, -1982745, -1982745);
+//            guiGraphics.fillGradient(getX(), (getY() + this.height) - 1, getX() + this.width, getY() + this.height, -1982745, -1982745);
+//        }
     }
 
     public void renderDescription(GuiGraphics guiGraphics, Screen screen, int mouseX, int mouseY) {

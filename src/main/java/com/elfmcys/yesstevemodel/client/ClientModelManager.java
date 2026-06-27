@@ -470,10 +470,10 @@ public class ClientModelManager {
         if (oldPreviews != null && !oldPreviews.isEmpty()) {
             for (ModelPackData preview : oldPreviews.values()) {
                 if (preview.getTexture() != null) {
-                    ResourceLocation loc = FileTypeUtil.getPackIconLocation(preview.getPath());
-                    Minecraft.getInstance().execute(() -> {
-                        Minecraft.getInstance().getTextureManager().release(loc);
-                    });
+//                    ResourceLocation loc = FileTypeUtil.getPackIconLocation(preview.getPath());
+//                    Minecraft.getInstance().execute(() -> {
+//                        Minecraft.getInstance().getTextureManager().release(loc);
+//                    });
                 }
             }
         }
@@ -627,21 +627,21 @@ public class ClientModelManager {
                 packData = new ModelPackData(packData.getPath(), FileTypeUtil.getFinalPathSegment(packData.getPath()), packData.getDescription(), packData.getTexture(), packData.getTranslations());
             }
             newPackMap.put(packData.getPath(), packData);
-            OuterFileTexture iconTexture = packData.getTexture();
-            if (iconTexture != null) {
-                ResourceLocation location2 = FileTypeUtil.getPackIconLocation(packData.getPath());
-                Minecraft.getInstance().submit(() -> {
-                    Minecraft.getInstance().textureManager.register(location2, iconTexture);
-                });
-            }
+//            OuterFileTexture iconTexture = packData.getTexture();
+//            if (iconTexture != null) {
+//                ResourceLocation location2 = FileTypeUtil.getPackIconLocation(packData.getPath());
+//                Minecraft.getInstance().submit(() -> {
+//                    Minecraft.getInstance().textureManager.register(location2, iconTexture);
+//                });
+//            }
         }
 
-        for (ModelPackData packData : modelPackMap.values()) {
-            if (!newPackMap.containsKey(packData.getPath()) && packData.getTexture() != null) {
-                ResourceLocation location = FileTypeUtil.getPackIconLocation(packData.getPath());
-                Minecraft.getInstance().submit(() -> Minecraft.getInstance().textureManager.release(location));
-            }
-        }
+//        for (ModelPackData packData : modelPackMap.values()) {
+//            if (!newPackMap.containsKey(packData.getPath()) && packData.getTexture() != null) {
+//                ResourceLocation location = FileTypeUtil.getPackIconLocation(packData.getPath());
+//                Minecraft.getInstance().submit(() -> Minecraft.getInstance().textureManager.release(location));
+//            }
+//        }
         modelPackMap = newPackMap;
     }
 

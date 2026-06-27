@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ServerAnimationInfo {
-
     // 动画的文件前缀 + 里面所有的动画名字
     private final Map<String, Set<String>> animations;
 

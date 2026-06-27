@@ -31,7 +31,6 @@ public class YSMBinaryDeserializer implements AutoCloseable{
 
 
     private RawYsmModel deserializeInternal(boolean closeOnExit) {
-        System.out.println("deserializing format " + format + " file...");
         if (format < 4) {
             deserializeLegacyV1();
         } else if (format <= 15) {
@@ -43,7 +42,6 @@ public class YSMBinaryDeserializer implements AutoCloseable{
         if (closeOnExit) {
             this.reader.close();
         }
-        System.out.println("end offset: 0x" + Integer.toHexString(offset));
         return model;
     }
 
@@ -57,7 +55,7 @@ public class YSMBinaryDeserializer implements AutoCloseable{
 
     public void parseYSMFooter(RawYsmModel footer) {
         try {
-            if (format < 9) { // 《9没有
+            if (format < 9) { // <9没有
                 return;
             }
             if (format > 26) { // >26 这里有个版本号
@@ -77,8 +75,7 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             }
 
         } catch (Throwable t) {
-            System.out.println("ERROR");
-            t.printStackTrace(System.out);
+            t.printStackTrace();
         }
     }
 
@@ -152,8 +149,7 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             if (tex != null) tex.hash = textureHash;
         }
 
-        String unkString = reader.readString();
-        System.out.println(unkString);
+        reader.readString();
     }
 
     private void deserializeLegacyV15() {
@@ -298,7 +294,7 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             for (RawYsmModel.RawTexture rawTexture : value.textures.values()) {
                 RawYsmModel.RawTexture remove = model.mainEntity.textures.remove(rawTexture.name);
                 if (remove != null) {
-                    System.out.println();
+                    // System.out.println();
                 }
             }
         }
@@ -355,7 +351,6 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             geoRef.sha256 = hash;
             geoRef.modelType = modelType;
             tempMainModels.add(geoRef);
-            System.out.println("Model Table Entry: ID=" + modelType + ", Hash=" + hash);
         }
         assignMainModels(tempMainModels);
 

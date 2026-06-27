@@ -69,7 +69,7 @@ public class YSMFolderDeserializer implements AutoCloseable {
                 return data;
             }
         } catch (Exception e) {
-            System.err.println("[YSM] Warning: Failed to read resource: " + relativePath);
+            throw new RuntimeException(e);
         }
         return null;
     }
@@ -882,7 +882,7 @@ public class YSMFolderDeserializer implements AutoCloseable {
                 }
             });
         } catch (IOException e) {
-            System.err.println("[YSM] Warning: Failed to scan global resources. " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

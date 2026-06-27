@@ -1,15 +1,15 @@
 package com.elfmcys.yesstevemodel.util;
 
-import com.elfmcys.yesstevemodel.YesSteveModel;
+//import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EntityType;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.tags.ITagManager;
-
-import java.util.HashSet;
+//import net.minecraft.resources.ResourceLocation;
+//import net.minecraft.world.entity.EntityType;
+//import net.minecraftforge.registries.ForgeRegistries;
+//import net.minecraftforge.registries.tags.ITagManager;
+//
+//import java.util.HashSet;
 import java.util.Set;
 
 public final class FileTypeUtil {
@@ -59,9 +59,9 @@ public final class FileTypeUtil {
         return lastSlashIndex >= 0 ? trimmedPath.substring(lastSlashIndex + 1) : trimmedPath;
     }
 
-    public static ResourceLocation getPackIconLocation(String str) {
-        return ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "model_pack_icon/" + str.hashCode());
-    }
+//    public static ResourceLocation getPackIconLocation(String str) {
+//        return ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "model_pack_icon/" + str.hashCode());
+//    }
 
     /**
      * 解析 "match"字段的
@@ -71,24 +71,24 @@ public final class FileTypeUtil {
      *  ],
      *  带#的是实体 Tag
      */
-    public static Set<ResourceLocation> resolveEntityTypes(String[] strArr) {
-        HashSet<ResourceLocation> hashSet = new HashSet<>();
-        for (String str : strArr) {
-            if (str.startsWith("#")) {
-                ResourceLocation resourceLocation = ResourceLocation.tryParse(str.substring(1));
-                if (resourceLocation != null) {
-                    ITagManager<EntityType<?>> iTagManagerTags = ForgeRegistries.ENTITY_TYPES.tags();
-                    iTagManagerTags.getTag(iTagManagerTags.createTagKey(resourceLocation)).forEach(entityType -> {
-                        hashSet.add(entityType.builtInRegistryHolder().key().location());
-                    });
-                }
-            } else {
-                ResourceLocation resourceLocation = ResourceLocation.tryParse(str);
-                if (resourceLocation != null) {
-                    hashSet.add(resourceLocation);
-                }
-            }
-        }
-        return hashSet;
-    }
+//    public static Set<ResourceLocation> resolveEntityTypes(String[] strArr) {
+//        HashSet<ResourceLocation> hashSet = new HashSet<>();
+//        for (String str : strArr) {
+//            if (str.startsWith("#")) {
+//                ResourceLocation resourceLocation = ResourceLocation.tryParse(str.substring(1));
+//                if (resourceLocation != null) {
+//                    ITagManager<EntityType<?>> iTagManagerTags = ForgeRegistries.ENTITY_TYPES.tags();
+//                    iTagManagerTags.getTag(iTagManagerTags.createTagKey(resourceLocation)).forEach(entityType -> {
+//                        hashSet.add(entityType.builtInRegistryHolder().key().location());
+//                    });
+//                }
+//            } else {
+//                ResourceLocation resourceLocation = ResourceLocation.tryParse(str);
+//                if (resourceLocation != null) {
+//                    hashSet.add(resourceLocation);
+//                }
+//            }
+//        }
+//        return hashSet;
+//    }
 }
