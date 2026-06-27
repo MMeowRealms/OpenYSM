@@ -148,7 +148,7 @@ public class YSMClientMapper {
         }
 
         List<AnimationControllerFile> controllersList = new ArrayList<>();
-        Map<String, AnimationController> controllerMap = buildControllers(raw.mainEntity.animationControllers, raw.properties.mergeMultilineExpr);
+        Map<String, AnimationController> controllerMap = buildControllers(null, raw.properties.mergeMultilineExpr);
         if (!controllerMap.isEmpty()) {
             controllersList.add(new AnimationControllerFile(controllerMap));
         }
@@ -380,28 +380,28 @@ public class YSMClientMapper {
             List<AnimationState> states = new ArrayList<>();
             for (RawYsmModel.RawControllerState rs : rac.states) {
                 List<Pair<String, IValue>> animations = new ArrayList<>();
-                for (Map.Entry<String, String> e : rs.animations.entrySet()) {
-                    IValue blend = null;
-                    if (!e.getValue().isEmpty()) {
-                        try {
-                            blend = parse(e.getValue());
-                        } catch (Exception ignore) {
-                        }
-                    }
-                    animations.add(Pair.of(e.getKey(), blend));
-                }
-
-                List<Pair<String, IValue>> transitions = new ArrayList<>();
-                for (Map.Entry<String, String> e : rs.transitions.entrySet()) {
-                    IValue condition = null;
-                    if (!e.getValue().isEmpty()) {
-                        try {
-                            condition = parse(e.getValue());
-                        } catch (Exception ignore) {
-                        }
-                    }
-                    transitions.add(Pair.of(e.getKey(), condition));
-                }
+//                for (Map.Entry<String, String> e : rs.animations.entrySet()) {
+//                    IValue blend = null;
+//                    if (!e.getValue().isEmpty()) {
+//                        try {
+//                            blend = parse(e.getValue());
+//                        } catch (Exception ignore) {
+//                        }
+//                    }
+//                    animations.add(Pair.of(e.getKey(), blend));
+//                }
+//
+//                List<Pair<String, IValue>> transitions = new ArrayList<>();
+//                for (Map.Entry<String, String> e : rs.transitions.entrySet()) {
+//                    IValue condition = null;
+//                    if (!e.getValue().isEmpty()) {
+//                        try {
+//                            condition = parse(e.getValue());
+//                        } catch (Exception ignore) {
+//                        }
+//                    }
+//                    transitions.add(Pair.of(e.getKey(), condition));
+//                }
 
                 List<IValue> onEntry = parse(rs.onEntry, mergeMultilineExpr);
                 List<IValue> onExit = parse(rs.onExit, mergeMultilineExpr);
@@ -421,7 +421,7 @@ public class YSMClientMapper {
                     blendTransition = new TicksInterpolator(rs.blendTransitionValue);
                 }
 
-                states.add(new AnimationState(rs.name, animations.toArray(new Pair[0]), transitions.toArray(new Pair[0]), rs.soundEffects.toArray(new String[0]), onEntry.toArray(new IValue[0]), onExit.toArray(new IValue[0]), blendTransition, rs.blendViaShortestPath));
+//                states.add(new AnimationState(rs.name, animations.toArray(new Pair[0]), transitions.toArray(new Pair[0]), rs.soundEffects.toArray(new String[0]), onEntry.toArray(new IValue[0]), onExit.toArray(new IValue[0]), blendTransition, rs.blendViaShortestPath));
             }
             result.put(rac.animationName, new AnimationController("default", states.toArray(new AnimationState[0])));
         }

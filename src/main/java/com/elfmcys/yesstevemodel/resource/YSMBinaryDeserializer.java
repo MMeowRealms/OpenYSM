@@ -1,13 +1,10 @@
 package com.elfmcys.yesstevemodel.resource;
 
 import com.elfmcys.yesstevemodel.resource.pojo.RawYsmModel;
-import rip.ysm.security.YSMByteBuf;
 import io.netty.buffer.Unpooled;
+import rip.ysm.security.YSMByteBuf;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class YSMBinaryDeserializer implements AutoCloseable{
 
@@ -31,6 +28,7 @@ public class YSMBinaryDeserializer implements AutoCloseable{
 
 
     private RawYsmModel deserializeInternal(boolean closeOnExit) {
+//        System.out.println("deserializing format " + format + " file...");
         if (format < 4) {
             deserializeLegacyV1();
         } else if (format <= 15) {
@@ -38,10 +36,17 @@ public class YSMBinaryDeserializer implements AutoCloseable{
         } else {
             deserializeModern();
         }
-        int offset = reader.getOffset(); // 关闭前获取偏移量
+
+        model.projectiles.entrySet().removeIf(entry -> { // 老版本格式可能有动画没模型没纹理
+            RawYsmModel.RawSubEntity sub = entry.getValue();
+            return sub.model == null || sub.textures.isEmpty();
+        });
+
+//        int offset = reader.getOffset(); // 关闭前获取偏移量
         if (closeOnExit) {
             this.reader.close();
         }
+//        System.out.println("end offset: 0x" + Integer.toHexString(offset));
         return model;
     }
 
@@ -55,11 +60,13 @@ public class YSMBinaryDeserializer implements AutoCloseable{
 
     public void parseYSMFooter(RawYsmModel footer) {
         try {
-            if (format < 9) { // <9没有
+            if (format < 9) { // 《9没有
                 return;
             }
             if (format > 26) { // >26 这里有个版本号
                 model.footer.version = reader.readVarInt();
+            } else {
+                model.footer.version = format;
             }
 
             model.footer.unkInt1 = reader.readVarInt(); // always 1
@@ -75,6 +82,7 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             }
 
         } catch (Throwable t) {
+//            System.out.println("ERROR");
             t.printStackTrace();
         }
     }
@@ -102,7 +110,19 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             int unknownPadding = reader.readVarInt();
             if (unknownPadding != 1) throw new RuntimeException("Expected 1");
             RawYsmModel.RawAnimationFile rawAnimationFile = parseAnimations();
-            model.mainEntity.animationFiles.put(YSMFolderDeserializer.getAnimKeyFromType(animationId), rawAnimationFile);
+
+            String animKey = YSMFolderDeserializer.getAnimKeyFromType(animationId);
+            if (animationId == 5) {
+                RawYsmModel.RawSubEntity arrowEntity = model.projectiles.computeIfAbsent("minecraft:arrow", k -> {
+                    RawYsmModel.RawSubEntity newSub = new RawYsmModel.RawSubEntity();
+                    newSub.identifier = k;
+                    return newSub;
+                });
+                arrowEntity.animationFiles.put(animKey, rawAnimationFile);
+            } else {
+                model.mainEntity.animationFiles.put(animKey, rawAnimationFile);
+            }
+
             rawAnimationFile.animType = animationId;
             tempAnims.put(animationId, rawAnimationFile);
         }
@@ -120,7 +140,13 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             tex.width = reader.readVarInt();
             tex.height = reader.readVarInt();
             tex.imageFormat = -1; // RGBA
-            model.mainEntity.textures.put(tex.name, tex);
+
+
+            if ("arrow.png".equals(tex.name))
+                model.projectiles.get("minecraft:arrow").textures.put(tex.name, tex);
+            else
+                model.mainEntity.textures.put(tex.name, tex);
+
             tempTextures.add(tex);
         }
 
@@ -149,7 +175,8 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             if (tex != null) tex.hash = textureHash;
         }
 
-        reader.readString();
+        String unkString = reader.readString();
+        model.properties.sha256 = unkString;
     }
 
     private void deserializeLegacyV15() {
@@ -176,24 +203,38 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             int unknownPadding = reader.readVarInt();
             if (unknownPadding != 1) throw new RuntimeException("Expected 1");
             RawYsmModel.RawAnimationFile rawAnimationFile = parseAnimations();
-            model.mainEntity.animationFiles.put(YSMFolderDeserializer.getAnimKeyFromType(animationId), rawAnimationFile);
+
+            String animKey = YSMFolderDeserializer.getAnimKeyFromType(animationId);
+            if (animationId == 5) {
+                RawYsmModel.RawSubEntity arrowEntity = model.projectiles.computeIfAbsent("minecraft:arrow", k -> {
+                    RawYsmModel.RawSubEntity newSub = new RawYsmModel.RawSubEntity();
+                    newSub.identifier = k;
+                    return newSub;
+                });
+                arrowEntity.animationFiles.put(animKey, rawAnimationFile);
+            } else {
+                model.mainEntity.animationFiles.put(animKey, rawAnimationFile);
+            }
+
             rawAnimationFile.animType = animationId;
             tempAnims.put(animationId, rawAnimationFile);
         }
 
-        List<RawYsmModel.RawAnimationController> tempControllers = new ArrayList<>();
         if (format > 9) {
-            parseAnimationControllers(model.mainEntity.animationControllers, tempControllers);
+            parseAnimationControllers(model.mainEntity.animationControllerFiles, false);
             int animationControllerTableSize = reader.readVarInt();
             for (int i = 0; i < animationControllerTableSize; ++i) {
                 String controllerName = reader.readString();
                 String controllerHash = reader.readString();
-                RawYsmModel.RawAnimationController ac = model.mainEntity.animationControllers.get(controllerName);
-                if (ac != null) ac.hash = controllerHash;
+                for (RawYsmModel.RawAnimationControllerFile file : model.mainEntity.animationControllerFiles) {
+                    if (controllerName.equals(file.name)) {
+                        file.hash = controllerHash;
+                        break;
+                    }
+                }
             }
         }
 
-        List<RawYsmModel.RawTexture> tempTextures = new ArrayList<>();
         int customTextureCount = reader.readVarInt();
         for (int i = 0; i < customTextureCount; ++i) {
             RawYsmModel.RawTexture tex = new RawYsmModel.RawTexture();
@@ -217,10 +258,9 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             // 特殊處理一下
             if ("/ARROW\\".equals(tex.name))
                 model.projectiles.get("minecraft:arrow").textures.put(tex.name, tex);
+            else
+                model.mainEntity.textures.put(tex.name, tex);
 
-            model.mainEntity.textures.put(tex.name, tex);
-
-            tempTextures.add(tex);
         }
 
         if (format > 9) {
@@ -234,15 +274,16 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             }
         }
 
+        List<RawYsmModel.RawImage> tempAvatars = new ArrayList<>();
         int extraTextureCount = reader.readVarInt();
         for (int i = 0; i < extraTextureCount; ++i) {
-            RawYsmModel.RawTexture tex = new RawYsmModel.RawTexture();
-            tex.name = reader.readString();
-            tex.data = reader.readByteArray();
-            tex.width = reader.readVarInt();
-            tex.height = reader.readVarInt();
-            tex.imageFormat = -1; // RGBA
-            model.mainEntity.textures.put(tex.name, tex); // 作為額外紋理存入主實體
+            RawYsmModel.RawImage avatar = new RawYsmModel.RawImage();
+            avatar.name = reader.readString();
+            avatar.data = reader.readByteArray();
+            avatar.width = reader.readVarInt();
+            avatar.height = reader.readVarInt();
+            avatar.format = -1; // 兼容旧版默认 RGBA
+            tempAvatars.add(avatar);
         }
 
         // Tables回填Hash
@@ -260,10 +301,10 @@ public class YSMBinaryDeserializer implements AutoCloseable{
         for (int i = 0; i < animationTableSize; ++i) {
             int animationId = reader.readVarInt();
             String animationHash = reader.readString();
-            if (tempAnims.get(animationId) == null) {
-                "".hashCode();
-
-            }
+//            if (tempAnims.get(animationId) == null) {
+//                "".hashCode();
+//
+//            }
             tempAnims.get(animationId).fileHash = animationHash;
         }
 
@@ -292,14 +333,21 @@ public class YSMBinaryDeserializer implements AutoCloseable{
         }
         for (RawYsmModel.RawSubEntity value : model.projectiles.values()) {
             for (RawYsmModel.RawTexture rawTexture : value.textures.values()) {
-                RawYsmModel.RawTexture remove = model.mainEntity.textures.remove(rawTexture.name);
-                if (remove != null) {
-                    // System.out.println();
-                }
+                model.mainEntity.textures.remove(rawTexture.name);
             }
         }
 
         parseYSMJson();
+
+        for (int i = 0; i < tempAvatars.size(); i++) {
+            RawYsmModel.RawImage avatar = tempAvatars.get(i);
+            if (i < model.metadata.authors.size()) {
+                model.metadata.authors.get(i).avatar = avatar.name;
+                model.metadata.authors.get(i).avatarImage = avatar;
+            } else {
+                model.metadata.extraAvatars.add(avatar);
+            }
+        }
     }
 
     private void deserializeModern() {
@@ -338,7 +386,8 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             animRef.fileHash = hash;
         }
 
-        parseAnimationControllers(model.mainEntity.animationControllers, null);
+        parseAnimationControllers(model.mainEntity.animationControllerFiles,true);
+
         parseTextureFiles(model.mainEntity.textures);
 
         int modelTotalCount = reader.readVarInt();
@@ -351,6 +400,7 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             geoRef.sha256 = hash;
             geoRef.modelType = modelType;
             tempMainModels.add(geoRef);
+//            System.out.println("Model Table Entry: ID=" + modelType + ", Hash=" + hash);
         }
         assignMainModels(tempMainModels);
 
@@ -376,8 +426,8 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             );
             rawAnimationFile.fileHash = hash;
         }
-        int separator = reader.readVarInt();
-        if (separator != 0) throw new RuntimeException("Separator != 0");
+
+        parseAnimationControllers(subEntity.animationControllerFiles, false);
 
         RawYsmModel.RawTexture baseTex = new RawYsmModel.RawTexture();
         SpecialImageResult imgRes = parseSpecialImage();
@@ -411,9 +461,15 @@ public class YSMBinaryDeserializer implements AutoCloseable{
 
 
         if (format > 26) {
-            int footerFlag = reader.readVarInt(); // always 01
-            String footerSubModuleName = reader.readString();
-            subEntity.identifier = footerSubModuleName;
+            int matchIdSize = reader.readVarInt();
+            subEntity.matchIds = new String[matchIdSize];
+            for (int j = 0; j < matchIdSize; j++) {
+                subEntity.matchIds[j] = reader.readString();
+            }
+
+            if (matchIdSize > 0) {
+                subEntity.identifier = subEntity.matchIds[0];
+            }
         }
 
         targetMap.put(subEntity.identifier, subEntity);
@@ -520,12 +576,18 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             }
         }
 
+        if (isNewVersionYsm == 0 && format <= 15) return;
+
         model.properties.widthScale = reader.readFloat();
         model.properties.heightScale = reader.readFloat();
 
         int extraAnimationsCount = reader.readVarInt();
         for (int i = 0; i < extraAnimationsCount; i++) {
-            model.properties.extraAnimations.put(reader.readString(), reader.readString());
+            try {
+                model.properties.extraAnimations.put(reader.readString(), reader.readString());
+            } catch (Throwable ex ){
+                throw new RuntimeException("Error reading extra animations at index " + i, ex);
+            }
         }
 
         if (format > 9) {
@@ -598,7 +660,6 @@ public class YSMBinaryDeserializer implements AutoCloseable{
                 avatar.height = reader.readVarInt();
                 avatar.format = reader.readVarInt();
                 avatar.unknownFlag = reader.readVarInt();
-                avatar.isPng = false;
                 if (i < model.metadata.authors.size()) {
                     model.metadata.authors.get(i).avatar = avatar.name;
                     model.metadata.authors.get(i).avatarImage = avatar;
@@ -747,78 +808,76 @@ public class YSMBinaryDeserializer implements AutoCloseable{
         }
     }
 
-    private void parseAnimationControllers(Map<String, RawYsmModel.RawAnimationController> targetMap, List<RawYsmModel.RawAnimationController> outTempList) {
+    private void parseAnimationControllers(List<RawYsmModel.RawAnimationControllerFile> targetList, boolean readName) {
         int controllerCount = reader.readVarInt();
         for (int i = 0; i < controllerCount; i++) {
-            RawYsmModel.RawAnimationController ac = new RawYsmModel.RawAnimationController();
+            RawYsmModel.RawAnimationControllerFile file = new RawYsmModel.RawAnimationControllerFile();
 
             if (format <= 15) {
-                ac.legacyUnknownInt = reader.readVarInt();
-                ac.name = "legacy_controller_" + i;
+                file.legacyUnknownInt = reader.readVarInt();
+                file.name = "legacy_controller_" + i;
             } else {
-                ac.name = reader.readString();
-                ac.hash = reader.readString();
+                if (readName) file.name = reader.readString();
+                file.hash = reader.readString();
             }
 
-            int animationCount = reader.readVarInt();
-            for (int animIndex = 0; animIndex < animationCount; ++animIndex) {
-                RawYsmModel.RawAnimationController entry = new RawYsmModel.RawAnimationController();
-                entry.animationName = reader.readString();
-                entry.initialState = reader.readString();
+            parseAnimationControllerBody(file.controllers);
+            targetList.add(file);
+        }
+    }
 
-                entry.name = ac.name;
-                entry.hash = ac.hash;
-                if (format <= 15) {
-                    entry.legacyUnknownInt = ac.legacyUnknownInt;
+    private void parseAnimationControllerBody(Map<String, RawYsmModel.RawAnimationController> targetMap) {
+        int animationCount = reader.readVarInt();
+        for (int animIndex = 0; animIndex < animationCount; ++animIndex) {
+            RawYsmModel.RawAnimationController entry = new RawYsmModel.RawAnimationController();
+            entry.animationName = reader.readString();
+            entry.initialState = reader.readString();
+
+            int statesCount = reader.readVarInt();
+            for (int s = 0; s < statesCount; s++) {
+                RawYsmModel.RawControllerState state = new RawYsmModel.RawControllerState();
+                state.name = reader.readString();
+
+                // animations
+                int animationsSize = reader.readVarInt();
+                for (int j = 0; j < animationsSize; j++) {
+                    state.animations.add(new AbstractMap.SimpleEntry<>(reader.readString(), reader.readString()));
                 }
-
-                int statesCount = reader.readVarInt();
-                for (int s = 0; s < statesCount; s++) {
-                    RawYsmModel.RawControllerState state = new RawYsmModel.RawControllerState();
-                    state.name = reader.readString();
-
-                    // animations
-                    int animationsSize = reader.readVarInt();
-                    for (int j = 0; j < animationsSize; j++) {
-                        state.animations.put(reader.readString(), reader.readString());
-                    }
-                    // transitions
-                    int transitionsSize = reader.readVarInt();
-                    for (int j = 0; j < transitionsSize; j++) {
-                        state.transitions.put(reader.readString(), reader.readString());
-                    }
-                    // on_entry
-                    int onEntryCount = reader.readVarInt();
-                    for (int j = 0; j < onEntryCount; j++) {
-                        state.onEntry.add(reader.readString());
-                    }
-                    // on_exit
-                    int onExitCount = reader.readVarInt();
-                    for (int j = 0; j < onExitCount; j++) {
-                        state.onExit.add(reader.readString());
-                    }
-                    // blend_transition
-                    if (reader.readVarInt() != 0) {
-                        state.blendTransitionValue = reader.readFloat();
-                    } else {
-                        int blendTransitionsCount = reader.readVarInt();
-                        for (int j = 0; j < blendTransitionsCount; j++) {
-                            state.blendTransitions.put(reader.readFloat(), reader.readFloat());
-                        }
-                    }
-                    state.blendViaShortestPath = reader.readVarInt() != 0;
-                    // sound_effects (format > 26)
-                    if (format > 26) {
-                        int soundEffectsCount = reader.readVarInt();
-                        for (int j = 0; j < soundEffectsCount; j++) {
-                            state.soundEffects.add(reader.readString());
-                        }
-                    }
-                    entry.states.add(state);
+                // transitions
+                int transitionsSize = reader.readVarInt();
+                for (int j = 0; j < transitionsSize; j++) {
+                    state.transitions.add(new AbstractMap.SimpleEntry<>(reader.readString(), reader.readString()));
                 }
-                targetMap.put(entry.animationName, entry);
-                if (outTempList != null) outTempList.add(entry);
+                // on_entry
+                int onEntryCount = reader.readVarInt();
+                for (int j = 0; j < onEntryCount; j++) {
+                    state.onEntry.add(reader.readString());
+                }
+                // on_exit
+                int onExitCount = reader.readVarInt();
+                for (int j = 0; j < onExitCount; j++) {
+                    state.onExit.add(reader.readString());
+                }
+                // blend_transition
+                if (reader.readVarInt() != 0) {
+                    state.blendTransitionValue = reader.readFloat();
+                } else {
+                    int blendTransitionsCount = reader.readVarInt();
+                    for (int j = 0; j < blendTransitionsCount; j++) {
+                        state.blendTransitions.put(reader.readFloat(), reader.readFloat());
+                    }
+                }
+                state.blendViaShortestPath = reader.readVarInt() != 0;
+                // sound_effects (format > 26)
+                if (format > 26) {
+                    int soundEffectsCount = reader.readVarInt();
+                    for (int j = 0; j < soundEffectsCount; j++) {
+                        state.soundEffects.add(reader.readString());
+                    }
+                }
+                entry.states.add(state);
             }
+            targetMap.put(entry.animationName, entry);
         }
     }
 

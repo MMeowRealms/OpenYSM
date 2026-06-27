@@ -20,7 +20,14 @@ public class RawYsmModel {
         public RawGeometry armModel;
         public Map<String, RawTexture> textures = new LinkedHashMap<>();
         public Map<String, RawAnimationFile> animationFiles = new LinkedHashMap<>();
-        public Map<String, RawAnimationController> animationControllers = new LinkedHashMap<>();
+        public List<RawAnimationControllerFile> animationControllerFiles = new ArrayList<>();
+    }
+
+    public static class RawAnimationControllerFile {
+        public String name;
+        public String hash;
+        public int legacyUnknownInt;
+        public Map<String, RawAnimationController> controllers = new LinkedHashMap<>();
     }
 
     public static class RawSubEntity {
@@ -29,7 +36,7 @@ public class RawYsmModel {
         public RawGeometry model;
         public Map<String, RawTexture> textures = new LinkedHashMap<>();
         public Map<String, RawAnimationFile> animationFiles = new LinkedHashMap<>();
-        public Map<String, RawAnimationController> animationControllers = new LinkedHashMap<>();
+        public List<RawAnimationControllerFile> animationControllerFiles = new ArrayList<>();
     }
 
     public static class RawGeometry {
@@ -164,20 +171,16 @@ public class RawYsmModel {
     }
 
     public static class RawAnimationController {
-        public String name;
-        public String hash;
         public String animationName;
         public String initialState;
 
-        // 作用暫時不明確，且通常為0，可能係歷史遺留問題
-        public int legacyUnknownInt;
         public List<RawControllerState> states = new ArrayList<>();
     }
 
     public static class RawControllerState {
         public String name;
-        public Map<String, String> animations = new LinkedHashMap<>();
-        public Map<String, String> transitions = new LinkedHashMap<>();
+        public List<Map.Entry<String, String>> animations = new ArrayList<>();
+        public List<Map.Entry<String, String>> transitions = new ArrayList<>();
         public List<String> onEntry = new ArrayList<>();
         public List<String> onExit = new ArrayList<>();
         public List<String> soundEffects = new ArrayList<>();
@@ -214,7 +217,6 @@ public class RawYsmModel {
 
         // 作用暫時不明確，且通常為1
         public int unknownFlag;
-        public boolean isPng;
     }
 
     public static class RawProperties {
@@ -229,7 +231,7 @@ public class RawYsmModel {
         public boolean allCutout = false;
         public boolean disablePreviewRotation = false;
         public boolean guiNoLighting = false;
-        public boolean mergeMultilineExpr = true; // 預設true
+        public boolean mergeMultilineExpr = false; // TODO:什么时候默认为true
 
         public String guiForeground = "";
         public String guiBackground = "";
